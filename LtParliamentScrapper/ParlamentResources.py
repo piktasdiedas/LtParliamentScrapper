@@ -12,6 +12,8 @@ class ParlamentResources:
 
     @SimpleBenchmarkToConsole
     def GetData(self, url: str) -> str:
+        print('Url --> ' + url)
+
         request = urllib.request.urlopen(self.__baseUrl + url)
         if request.status == 200:
             contents = request.read().decode('utf-8')

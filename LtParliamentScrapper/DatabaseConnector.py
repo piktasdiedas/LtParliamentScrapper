@@ -19,6 +19,15 @@ class DatabaseConnector:
         self.user = Config.db['user']
         self.password = Config.db['password']
 
+    def ExecuteMultipleRaw(self, sql: str):
+        conn = pymysql.connect(host=self.host, port=self.port, user=self.user, passwd=self.password, db=self.db)
+        cur = conn.cursor()
+
+        r = cur.execute(sql)
+        records = [x[0] for x in cur.fetchall()]
+
+
+        return records
 
     def ExecuteRawSingle(self, sql: str):
         conn = pymysql.connect(host=self.host, port=self.port, user=self.user, passwd=self.password, db=self.db)
@@ -32,9 +41,13 @@ class DatabaseConnector:
 
     @SimpleBenchmarkToConsole
     def WriteToDatabase(self, objects: List[str], table: str, keys: Dict, propertiesAgainst: List[str] = [], shouldUpdateDelegate = None):
+        
+        if len(objects) == 0:
+            return
+
         conn = pymysql.connect(host=self.host, port=self.port, user=self.user, passwd=self.password, db=self.db)
         cur = conn.cursor()
-        print('table -- ' + table)
+        print('table --> ' + table)
         batchSize = 0
 
         inserted = 0
@@ -58,8 +71,8 @@ class DatabaseConnector:
                 checkQuery = f"SELECT {', '.join(selectCols)} FROM {table} WHERE {' AND '.join(whereClauseList)}" 
 
             try:
+                cur = conn.cursor()
                 if len(propertiesAgainst) > 0:
-                    cur = conn.cursor()
                     r = cur.execute(checkQuery)
                     records = cur.fetchall()
                     if len(records) > 0: 
@@ -79,6 +92,8 @@ class DatabaseConnector:
                     updated += 1
                 else:
                     skipped += 1
+
+                cur.close()
             except pymysql.IntegrityError as e:
                 failed += 1
             except Exception as e:
@@ -87,11 +102,11 @@ class DatabaseConnector:
 
             batchSize += 1
             if batchSize >= self.maxBatchSize:
-                conn.commit
+                conn.commit()
                 batchSize = 0
 
         if batchSize > 0:
-            conn.commit
+            conn.commit()
 
         print(f".")
         print(f"--- Inserted - {inserted} --- Updated - {updated} --- Skipped - {skipped} --- Failed - {failed}")

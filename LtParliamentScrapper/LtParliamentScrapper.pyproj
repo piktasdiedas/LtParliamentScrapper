@@ -30,9 +30,6 @@
     <Compile Include="Models.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="module1.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="ParlamentResources.py">
       <SubType>Code</SubType>
     </Compile>
@@ -40,6 +37,16 @@
     <Compile Include="SimpleBenchmarkToConsole.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="SyncTasks\TempUpdate.py" />
+    <Compile Include="SyncTasks\TermsOfOffice_Sessions_Members_UpdateTask.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XmlParser.py">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="SyncTasks\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
