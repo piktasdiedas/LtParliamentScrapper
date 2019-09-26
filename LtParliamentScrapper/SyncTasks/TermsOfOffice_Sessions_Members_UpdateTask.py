@@ -74,21 +74,32 @@ def TermsOfOffice_Sessions_Members_UpdateTask() -> None:
         meetingsXml = resources.GetData('seimo_posedziai?sesijos_id=' + s.Id) 
         meetings = parser.ParseMeetingsFromXml(meetingsXml)
         meetingDocuments = parser.ParseMeetingDocumentsFromXml(meetingsXml)
-        database.WriteToDatabase(meetings, 'Meetings', meetingMap, ['Id'])
-        database.WriteToDatabase(meetingDocuments, 'MeetingDocuments', meetingDocumentMap, ['MeetingId', 'Url'])
+        # database.WriteToDatabase(meetings, 'Meetings', meetingMap, ['Id'])
+        # database.WriteToDatabase(meetingDocuments, 'MeetingDocuments', meetingDocumentMap, ['MeetingId', 'Url'])
 
         for m in meetings:
-            agendaXml = resources.GetData(f'seimo_posedzio_darbotvarke?posedzio_id={m.Id}')
+            # agendaXml = resources.GetData(f'seimo_posedzio_darbotvarke?posedzio_id={m.Id}')
 
-            agendas = parser.ParseAgendasFromXml(agendaXml, m.Id)
-            agendaQuestions = parser.ParseAgendaQuestionsFromXml(agendaXml, m.Id)
-            agendaQuestionSpeakers = parser.ParseAgendaQuestionSpeakersFromXml(agendaXml, m.Id)
-
-
-            database.WriteToDatabase(agendas, 'Agendas', agendaMap, ['MeetingId', 'Number'], doUpdate)
-            database.WriteToDatabase(agendaQuestions, 'AgendaQuestions', agendaQuestionMap, ['QuestionId', 'Number'], doUpdate)
-            database.WriteToDatabase(agendaQuestionSpeakers, 'AgendaQuestionSpeakers', agendaQuestionSpeakerMap, ['MeetingId', 'Number', 'Person'], doUpdate)
+            # agendas = parser.ParseAgendasFromXml(agendaXml, m.Id)
+            # agendaQuestions = parser.ParseAgendaQuestionsFromXml(agendaXml, m.Id)
+            # agendaQuestionSpeakers = parser.ParseAgendaQuestionSpeakersFromXml(agendaXml, m.Id)
 
 
+            # database.WriteToDatabase(agendas, 'Agendas', agendaMap, ['MeetingId', 'Number'], doUpdate)
+            # database.WriteToDatabase(agendaQuestions, 'AgendaQuestions', agendaQuestionMap, ['QuestionId', 'Number'], doUpdate)
+            # database.WriteToDatabase(agendaQuestionSpeakers, 'AgendaQuestionSpeakers', agendaQuestionSpeakerMap, ['MeetingId', 'Number', 'Person'], doUpdate)
 
+            
+            actualMeetingXml = resources.GetData(f'seimo_posedzio_eiga_full?posedzio_id={m.Id}')
 
+            votings = parser.ParseVotingsFromXml(actualMeetingXml)
+            # database.WriteToDatabase(votings, 'Votings', votingMap, ['VotingId'])
+            
+            for v in votings:
+                if 'bendru sutarimu' not in v.Description:
+                    continue # skip votings if there was no actual voting
+
+                votesXml = resources.GetData(f'sp_balsavimo_rezultatai?balsavimo_id={v.VotingId}')
+                votes = parser.ParseVotesFromXml(votesXml)
+                # database.WriteToDatabase(votes, 'Votes', voteMap, ['VotingId', 'MemberId'])
+                hhhhh = 5555

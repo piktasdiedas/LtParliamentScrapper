@@ -411,6 +411,79 @@ class XmlParser:
 
 
 
+    
+    
+    def ParseVotingsFromXml(self, xml: str) -> List[Voting]:
+        parsed = []
+        
+        xmlFixed = self.fixXml(xml, id)
+
+        xmlDom = xmlTree.fromstring(xmlFixed)
+        root = xmlDom.find("posedis")
+        meetingId = root.attrib['pos_id']
+        root = root.find('posedzio-eiga')
+        for node in root:
+            votings = node.find("balsavimai")
+            for v in votings:
+                votingId = v.attrib['bals_id']
+                resolution = v.find('aprasas').text
+                description = v.find('antraste').text
+                
+                parsed.append(Voting(VotingId = votingId, MeetingId = meetingId,  Resolution = resolution, Description = description,))
+
+        return parsed
+
+
+    
+    
+    def ParseVotesFromXml(self, xml: str) -> List[Vote]:
+        parsed = []
+        
+        xmlFixed = self.fixXml(xml, id)
+
+        xmlDom = xmlTree.fromstring(xmlFixed)
+        root = xmlDom.find("SeimoNariųBalsavimas")
+        votingId = root.attrib['balsavimo_id']
+        for node in root:
+            if node.tag == 'BendriBalsavimoRezultatai':
+                dateOn = node.attrib['balsavimo_laikas']
+
+            if node.tag == 'IndividualusBalsavimoRezultatas':
+                memberId = node.attrib["asmens_id"]
+                vote = node.attrib['kaip_balsavo']
+                parsed.append(Vote(VotingId = votingId, MemberId = memberId, Vote = vote, DateOn = dateOn))
+
+        return parsed
+
+
+
+    def ParseRegistrationFromXml(self, xml: str) -> List[Registration]:
+        parsed = []
+        
+        xmlFixed = self.fixXml(xml, id)
+
+        xmlDom = xmlTree.fromstring(xmlFixed)
+        root = xmlDom.find("SeimoNariųBalsavimas")
+        votingId = root.attrib['balsavimo_id']
+        for node in root:
+            if node.tag == 'BendriBalsavimoRezultatai':
+                dateOn = node.attrib['balsavimo_laikas']
+
+            if node.tag == 'IndividualusBalsavimoRezultatas':
+                memberId = node.attrib["asmens_id"]
+                vote = node.attrib['kaip_balsavo']
+                parsed.append(Registration(VotingId = votingId, MemberId = memberId, Vote = vote, DateOn = dateOn))
+
+        return parsed
+
+
+
+
+
+
+
+
+
 
     def fixXml(self, xml: str, id = 0) -> str:
         temp = xml
