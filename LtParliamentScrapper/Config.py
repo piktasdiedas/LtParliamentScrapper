@@ -1,6 +1,6 @@
 
 db = {
-    'host': '192.168.0.199',
+    'host': '86.100.23.46',
     'port': 3306,
     'db': 'parlament',
     'user': 'parl',

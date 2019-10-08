@@ -103,7 +103,7 @@ class XmlParser:
         root = xmlDom.find("SeimoKadencija")
         for node in root:
             id = node.attrib["padalinio_id"]
-            name = node.attrib["padalinio_pavadinimas"]
+            name = self.fixQuotes(node.attrib["padalinio_pavadinimas"])
             shortName = node.attrib["padalinio_pavadinimo_santrumpa"]
         
             parsed.append(Faction(Id = id, Name = name, ShortName = shortName))
@@ -193,7 +193,7 @@ class XmlParser:
         root = xmlDom.find("SeimoKadencija")
         for node in root:
             id = node.attrib["padalinio_id"]
-            name = node.attrib["padalinio_pavadinimas"]
+            name = self.fixQuotes(node.attrib["padalinio_pavadinimas"])
         
             parsed.append(Commission(Id = id, Name = name))
 
@@ -210,7 +210,7 @@ class XmlParser:
                 if nodeChild.tag == 'Pareigos':
                     if 'padalinio_pavadinimas' in nodeChild.attrib and ('komitet' in nodeChild.attrib['pareigos'].lower()):
                         id = nodeChild.attrib['padalinio_id']
-                        name = nodeChild.attrib['padalinio_pavadinimas']
+                        name = self.fixQuotes(nodeChild.attrib['padalinio_pavadinimas'])
                         parsed.append(Committee(Id = id, Name = name))
 
         return parsed
@@ -247,7 +247,7 @@ class XmlParser:
                 if nodeChild.tag == 'Pareigos':
                     if 'padalinio_pavadinimas' in nodeChild.attrib and ('komisij' in nodeChild.attrib['pareigos'].lower()):
                         id = nodeChild.attrib['padalinio_id']
-                        name = nodeChild.attrib['padalinio_pavadinimas']
+                        name = self.fixQuotes(nodeChild.attrib['padalinio_pavadinimas'])
                         parsed.append(Commission(Id = id, Name = name))
 
         return parsed
@@ -285,7 +285,7 @@ class XmlParser:
                 if nodeChild.tag == 'Pareigos':
                     if 'padalinio_pavadinimas' in nodeChild.attrib and ('frakcij' in nodeChild.attrib['pareigos'].lower()):
                         id = nodeChild.attrib['padalinio_id']
-                        name = nodeChild.attrib['padalinio_pavadinimas']
+                        name = self.fixQuotes(nodeChild.attrib['padalinio_pavadinimas'])
                         parsed.append(Faction(Id = id, Name = name, ShortName = ''))
 
         return parsed
@@ -323,7 +323,7 @@ class XmlParser:
                 if nodeChild.tag == 'Pareigos':
                     if 'parlamentinės_grupės_pavadinimas' in nodeChild.attrib:
                         id = nodeChild.attrib['parlamentinės_grupės_id']
-                        name = nodeChild.attrib['parlamentinės_grupės_pavadinimas']
+                        name = self.fixQuotes(nodeChild.attrib['parlamentinės_grupės_pavadinimas'])
                         parsed.append(ParlamentGroup(Id = id, Name = name))
 
         return parsed
@@ -358,7 +358,7 @@ class XmlParser:
         meetingId = root.attrib['posėdžio_id']
         for node in root:
             number = node.attrib["numeris"]
-            name = node.attrib['pavadinimas']
+            name = self.fixQuotes(node.attrib['pavadinimas'])
             dateFrom = None if node.attrib["laikas_nuo"] == '' else node.attrib["laikas_nuo"] 
             dateTo = None if node.attrib["laikas_iki"] == '' else node.attrib["laikas_iki"] 
 
@@ -377,7 +377,7 @@ class XmlParser:
         meetingId = root.attrib['posėdžio_id']
         for node in root:
             number = node.attrib["numeris"]
-            name = node.attrib['pavadinimas']
+            name = self.fixQuotes(node.attrib['pavadinimas'])
             for nodeChild in node:
                 if nodeChild.tag == 'KlausimoStadija':
                     questionId = nodeChild.attrib['darbotvarkės_klausimo_id']
@@ -419,4 +419,11 @@ class XmlParser:
             temp = temp.replace('"Žemaičių legiono"', '„Žemaičių legiono”')
             temp = temp.replace('"Misija Sibiras”', '„Misija Sibiras')
 
+        if id == '-500481' or id == -500481:
+            temp = temp.replace('judėjimo "Černobylis" pirmininkas', 'judėjimo „Černobylis” pirmininkas')
+
+        return temp
+
+    def fixQuotes(self, text: str) -> str:
+        temp = text.replace('„', '"').replace('”', '"').replace('„', '"').replace('quot;', '"')
         return temp

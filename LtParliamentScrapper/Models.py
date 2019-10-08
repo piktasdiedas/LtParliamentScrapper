@@ -64,7 +64,7 @@ agendaQuestionMap = collections.OrderedDict([('QuestionId', 'QuestionId'), ('Mee
 AgendaQuestion = collections.namedtuple('AgendaQuestion', ' '.join(agendaQuestionMap.keys()))
 
 agendaQuestionSpeakerMap = collections.OrderedDict([('MeetingId', 'MeetingId'), ('Person', 'Person'), ('Position', 'Position'), ('Number', 'Number')])
-AgendaQuestionSpeaker = collections.namedtuple('AgendaQuestionSpeakers', ' '.join(agendaQuestionSpeakersMap.keys()))
+AgendaQuestionSpeaker = collections.namedtuple('AgendaQuestionSpeakers', ' '.join(agendaQuestionSpeakerMap.keys()))
 
 
 

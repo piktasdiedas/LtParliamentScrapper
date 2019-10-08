@@ -113,6 +113,7 @@ class DatabaseConnector:
 
 
         conn.commit()
+        cur.close()
         conn.close()
 
         # SELECT * FROM `CommitteeMembers` WHERE CommitteeId = 40 AND MemberId = 48690 and `From` = '2016-11-16'
