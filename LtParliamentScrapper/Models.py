@@ -75,8 +75,8 @@ MeetingQuestion = collections.namedtuple('MeetingQuestion', ' '.join(meetingQues
 votingMap = collections.OrderedDict([('VotingId', 'VotingId'), ('MeetingId', 'MeetingId'), ('Resolution', 'Resolution'), ('Description', 'Description')])
 Voting = collections.namedtuple('Vote', ' '.join(votingMap.keys()))
 
-voteMap = collections.OrderedDict([('VotingId', 'VotingId'), ('MemberId', 'MemberId'), ('Vote', 'Vote'), ('DateOn', 'DateOn')])
-Vote = collections.namedtuple('Vote', ' '.join(votegMap.keys()))
+voteMap = collections.OrderedDict([('VotingId', 'VotingId'), ('MemberId', 'MemberId'), ('Vote', 'Vote'), ('VoteStr', 'VoteStr'), ('DateOn', 'DateOn')])
+Vote = collections.namedtuple('Vote', ' '.join(voteMap.keys()))
 
 
 
