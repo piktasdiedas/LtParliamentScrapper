@@ -112,3 +112,4 @@ def TermsOfOffice_Sessions_Members_UpdateTask() -> None:
 
                 database.WriteToDatabase(votes, 'Votes', voteMap, ['VotingId', 'MemberId'])
                 hhhhh = 5555
+
