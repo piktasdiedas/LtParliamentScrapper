@@ -68,3 +68,26 @@ AgendaQuestionSpeaker = collections.namedtuple('AgendaQuestionSpeakers', ' '.joi
 
 
 
+
+meetingQuestionMap = collections.OrderedDict([('MeetingQuestionId', 'MeetingQuestionId'), ('QuestionId', 'QuestionId'), ('MeetingId', 'MeetingId'), ('Name', 'Name'), ('Stage', 'Stage'), ('Type', 'Type'), ('DocumentId', 'DocumentId'), ('Number', 'Number'), ('From', 'From'), ('To', 'To')])
+MeetingQuestion = collections.namedtuple('MeetingQuestion', ' '.join(meetingQuestionMap.keys()))
+
+votingMap = collections.OrderedDict([('VotingId', 'VotingId'), ('MeetingId', 'MeetingId'), ('Resolution', 'Resolution'), ('Description', 'Description')])
+Voting = collections.namedtuple('Vote', ' '.join(votingMap.keys()))
+
+voteMap = collections.OrderedDict([('VotingId', 'VotingId'), ('MemberId', 'MemberId'), ('Vote', 'Vote'), ('VoteStr', 'VoteStr'), ('DateOn', 'DateOn')])
+Vote = collections.namedtuple('Vote', ' '.join(voteMap.keys()))
+
+
+
+registrationMap = collections.OrderedDict([('RegistrationId', 'RegistrationId'), ('MeetingId', 'MeetingId'), ('From', 'From'), ('TotalRegistered', 'TotalRegistered')])
+Registration = collections.namedtuple('Vote', ' '.join(registrationMap.keys()))
+
+
+userRegistrationMap = collections.OrderedDict([('RegistrationId', 'RegistrationId'), ('MemberId', 'MemberId'), ('HasRegistered', 'HasRegistered'), ('DateOn', 'DateOn')])
+UserRegistration = collections.namedtuple('Registration', ' '.join(userRegistrationMap.keys()))
+
+
+
+meetingQuestionSpeakerMap = collections.OrderedDict([('MeetingId', 'MeetingId'), ('Person', 'Person'), ('PersonId', 'PersonId'), ('DiscussionId', 'DiscussionId'), ('Position', 'Position'), ('Number', 'Number'), ('From', 'From'), ('To', 'To')])
+MeetingQuestionSpeaker = collections.namedtuple('MeetingQuestionSpeaker', ' '.join(meetingQuestionSpeakerMap.keys()))

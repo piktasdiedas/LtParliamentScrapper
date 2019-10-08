@@ -9,15 +9,15 @@ from Models import *
 
 class XmlParser:
 
-    def ParseVotesFromXml(self, xml: str) -> str:
-        xmlDom = xmlTree.fromstring(xml)
-        votes = xmlDom.find("SeimoNariųBalsavimas")
-        for node in votes:
-            if node.tag == "BendriBalsavimoRezultatai":
-                approved = "Taip" if (node.attrib["už"] > node.attrib["prieš"]) else "NE"
-                print(node.attrib["viso"] + " --> " + approved)
-            elif node.tag == "IndividualusBalsavimoRezultatas":
-                 print(node.attrib['pavardė'] + " " + node.attrib['vardas'] + " --> ")
+    #def ParseVotesFromXml(self, xml: str) -> str:
+    #    xmlDom = xmlTree.fromstring(xml)
+    #    votes = xmlDom.find("SeimoNariųBalsavimas")
+    #    for node in votes:
+    #        if node.tag == "BendriBalsavimoRezultatai":
+    #            approved = "Taip" if (node.attrib["už"] > node.attrib["prieš"]) else "NE"
+    #            print(node.attrib["viso"] + " --> " + approved)
+    #        elif node.tag == "IndividualusBalsavimoRezultatas":
+    #             print(node.attrib['pavardė'] + " " + node.attrib['vardas'] + " --> ")
 
 
 
@@ -408,6 +408,85 @@ class XmlParser:
                     parsed.append(AgendaQuestionSpeaker(MeetingId = meetingId,  Person = person, Position = position, Number = number))
 
         return parsed
+
+
+
+    
+    
+    def ParseVotingsFromXml(self, xml: str) -> List[Voting]:
+        parsed = []
+        
+        xmlFixed = self.fixXml(xml, id)
+
+        xmlDom = xmlTree.fromstring(xmlFixed)
+        root = xmlDom.find("posedis")
+        meetingId = root.attrib['pos_id']
+        root = root.find('posedzio-eiga')
+        for node in root:
+            votings = node.find("balsavimai")
+            for v in votings:
+                votingId = v.attrib['bals_id']
+                resolution = v.find('aprasas').text
+                description = v.find('antraste').text
+                
+                parsed.append(Voting(VotingId = votingId, MeetingId = meetingId,  Resolution = resolution, Description = description,))
+
+        return parsed
+
+
+    
+    
+    def ParseVotesFromXml(self, xml: str) -> List[Vote]:
+        parsed = []
+        
+        xmlFixed = self.fixXml(xml, id)
+
+        xmlDom = xmlTree.fromstring(xmlFixed)
+        root = xmlDom.find("SeimoNariųBalsavimas")
+        votingId = root.attrib['balsavimo_id']
+        for node in root:
+            if node.tag == 'BendriBalsavimoRezultatai':
+                dateOn = node.attrib['balsavimo_laikas']
+
+            if node.tag == 'IndividualusBalsavimoRezultatas':
+                memberId = node.attrib['asmens_id']
+                voteStr = node.attrib['kaip_balsavo']
+                vote = 0 if voteStr.lower() == 'prieš' else\
+                   1 if voteStr.lower() == 'už' else\
+                   2 if voteStr.lower() == 'susilaikė' else\
+                   3 if voteStr.lower() == '' else -1
+                if vote == -1:
+                    raise Exception('Unknown voting status', 'Vote')
+                parsed.append(Vote(VotingId = votingId, MemberId = memberId, Vote = vote, VoteStr = voteStr, DateOn = dateOn))
+
+        return parsed
+
+
+
+    def ParseRegistrationFromXml(self, xml: str) -> List[Registration]:
+        parsed = []
+        
+        xmlFixed = self.fixXml(xml, id)
+
+        xmlDom = xmlTree.fromstring(xmlFixed)
+        root = xmlDom.find("SeimoNariųBalsavimas")
+        votingId = root.attrib['balsavimo_id']
+        for node in root:
+            if node.tag == 'BendriBalsavimoRezultatai':
+                dateOn = node.attrib['balsavimo_laikas']
+
+            if node.tag == 'IndividualusBalsavimoRezultatas':
+                memberId = node.attrib["asmens_id"]
+                vote = node.attrib['kaip_balsavo']
+                parsed.append(Registration(VotingId = votingId, MemberId = memberId, Vote = vote, DateOn = dateOn))
+
+        return parsed
+
+
+
+
+
+
 
 
 

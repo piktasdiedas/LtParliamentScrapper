@@ -58,11 +58,11 @@ class DatabaseConnector:
         paramsHolder = ['%s' for i in range(len(keys))]
         keysHolder = ['`{0}`'.format(key) for key in keys]
         insertQuery = f"INSERT INTO `{table}` ({', '.join(keysHolder)}) VALUES ({', '.join(paramsHolder)})"
-
+        checkQuery = ""
 
         for o in objects:
             temp = [getattr(o, key) for key in keys]
-            checkQuery = ""
+            
             executeInsertQuery = True
         
             if len(propertiesAgainst) > 0:
