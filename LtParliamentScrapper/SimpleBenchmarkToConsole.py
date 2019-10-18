@@ -7,17 +7,14 @@ import datetime
 def SimpleBenchmarkToConsole(method):
     def wrapper(*args, **kw):
 
-        print(f"")
-        print(f"-------------")
-        print(f"Method '{method.__name__}' started at {datetime.datetime.now()}.")
+        print(f"-------> Method '{method.__name__}'")
+        print(f"Started ---> {datetime.datetime.now()}.")
 
         ts = timer()
         result = method(*args, **kw)
         te = timer()
         
-        print(f"")
-        print(f"-------------")
-        print(f"Method '{method.__name__}' execution time - {int((te - ts) * 1000)}ms")
+        print(f"Execution time ---> {int((te - ts) * 1000)}ms")
 
         return result
     return wrapper

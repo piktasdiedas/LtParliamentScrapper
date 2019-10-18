@@ -57,7 +57,7 @@ class DatabaseConnector:
         _continue = True
         while _continue:
             if loopCount == 10:
-                raise Exception(f'Unsuccessful `{loopCount}` tries have been exceeded while tryiing to write to database')
+                raise Exception(f"Unsuccessful `{loopCount}` tries have been exceeded while tryiing to write to database")
 
             #batchSize = 0
             inserted = 0
@@ -70,6 +70,7 @@ class DatabaseConnector:
 
                 for o in objects:
                     tempObj = o
+
                     temp = [getattr(o, key) for key in keys]
             
                     executeInsertQuery = True
@@ -118,6 +119,7 @@ class DatabaseConnector:
                 conn.close()
 
                 _continue = False
+                loopCount = 0
                 
             except pymysql.IntegrityError as e:
                 print(e)

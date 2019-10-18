@@ -17,7 +17,7 @@ termOfOfficeMemberMap = collections.OrderedDict([('TermOfOfficeId', 'TermOfOffic
 TermOfOfficeMember = collections.namedtuple('TermOfOfficeMember', ' '.join(termOfOfficeMemberMap.keys()))
 
 
-meetingMap = collections.OrderedDict([('Id', 'Id'), ('SessionId', 'SessionId'), ('Type', 'Type'), ('From', 'From'), ('To', 'To'), ('Protocol', 'Protocol'), ('Stenogram', 'Stenogram'), ('Video', 'Video')])
+meetingMap = collections.OrderedDict([('Id', 'Id'), ('SessionId', 'SessionId'), ('Type', 'Type'), ('From', 'From'), ('To', 'To')])
 Meeting = collections.namedtuple('Meeting', ' '.join(meetingMap.keys()))
 
 
@@ -69,7 +69,7 @@ AgendaQuestionSpeaker = collections.namedtuple('AgendaQuestionSpeakers', ' '.joi
 
 
 
-meetingQuestionMap = collections.OrderedDict([('MeetingQuestionId', 'MeetingQuestionId'), ('QuestionId', 'QuestionId'), ('MeetingId', 'MeetingId'), ('Name', 'Name'), ('Stage', 'Stage'), ('Type', 'Type'), ('DocumentId', 'DocumentId'), ('Number', 'Number'), ('From', 'From'), ('To', 'To')])
+meetingQuestionMap = collections.OrderedDict([('MeetingQuestionId', 'MeetingQuestionId'), ('QuestionId', 'QuestionId'), ('MeetingId', 'MeetingId'), ('Name', 'Name'), ('Stage', 'Stage'), ('Type', 'Type'), ('DocumentId', 'DocumentId'), ('Number', 'Number'), ('From', 'From'), ('To', 'To'), ('QuestionGroupId', 'QuestionGroupId')])
 MeetingQuestion = collections.namedtuple('MeetingQuestion', ' '.join(meetingQuestionMap.keys()))
 
 votingMap = collections.OrderedDict([('VotingId', 'VotingId'), ('MeetingId', 'MeetingId'), ('Resolution', 'Resolution'), ('Description', 'Description')])
@@ -81,11 +81,11 @@ Vote = collections.namedtuple('Vote', ' '.join(voteMap.keys()))
 
 
 registrationMap = collections.OrderedDict([('RegistrationId', 'RegistrationId'), ('MeetingId', 'MeetingId'), ('From', 'From'), ('TotalRegistered', 'TotalRegistered')])
-Registration = collections.namedtuple('Vote', ' '.join(registrationMap.keys()))
+Registration = collections.namedtuple('Registration', ' '.join(registrationMap.keys()))
 
 
-userRegistrationMap = collections.OrderedDict([('RegistrationId', 'RegistrationId'), ('MemberId', 'MemberId'), ('HasRegistered', 'HasRegistered'), ('DateOn', 'DateOn')])
-UserRegistration = collections.namedtuple('Registration', ' '.join(userRegistrationMap.keys()))
+registratedUserMap = collections.OrderedDict([('RegistrationId', 'RegistrationId'), ('MemberId', 'MemberId'), ('HasRegistered', 'HasRegistered'), ('DateOn', 'DateOn')])
+RegistratedUser = collections.namedtuple('RegistratedUser', ' '.join(registratedUserMap.keys()))
 
 
 

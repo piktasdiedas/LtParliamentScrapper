@@ -1,4 +1,5 @@
 from typing import *
+from datetime import date
 
 from XmlParser import *
 from ParlamentResources import *
@@ -11,6 +12,16 @@ def TermsOfOffice_Sessions_Members_UpdateTask() -> None:
     resources = ParlamentResources()
     database = DatabaseConnector()
     parser = XmlParser()
+
+
+    testId = '-501401'
+    aggg = resources.GetData('seimo_posedzio_darbotvarke?posedzio_id=' + testId)
+    agendaModels = parser.ParseAgendaQuestionsFromXml(aggg, testId)
+    assssss = parser.ParseAgendasFromXml(aggg, testId)
+    meet = resources.GetData('seimo_posedzio_eiga_full?posedzio_id=' + testId)
+    ddd = parser.ParseMeetingQuestionsFromXml(meet, agendaModels)
+    #database.WriteToDatabase(ddd, 'MeetingQuestions', meetingQuestionMap, ['MeetingQuestionId', 'QuestionId'], doUpdate)
+    database.WriteToDatabase(agendaModels, 'AgendaQuestions', agendaQuestionMap, ['QuestionId', 'Number'], doUpdate)
 
     #####
 
@@ -33,9 +44,9 @@ def TermsOfOffice_Sessions_Members_UpdateTask() -> None:
 
     termOfOffice.reverse()
     for t in termOfOffice:
-
-        if t.Id != '8':
-            continue
+        break
+        #if t.Id != '8':
+        #    continue
 
         membersXml = resources.GetData('seimo_nariai?kadencijos_id=' + str(t.Id))
         members = parser.ParseMembersFromXml(membersXml)
@@ -57,57 +68,57 @@ def TermsOfOffice_Sessions_Members_UpdateTask() -> None:
         parlamentGroups = parser.ParseParlamentGroupsFromXmlFromMembers(membersXml)
         parlamentGroupMembers = parser.ParseParlamentGroupMembersFromXmlFromMembers(membersXml)
 
-        #database.WriteToDatabase(committees, 'Committees', committeeMap, ['Id'])
-        #database.WriteToDatabase(commissions, 'Commissions', commissionMap, ['Id'])
-        #database.WriteToDatabase(factions, 'Factions', factionMap, ['Id'])
-        #database.WriteToDatabase(parlamentGroups, 'ParlamentGroups', parlamentGroupMap, ['Id'])
-        #database.WriteToDatabase(committeeMembers, 'CommitteeMembers', committeeMemberMap, ['MemberId', 'CommitteeId', 'From'], shouldUpdateDelegate)
-        #database.WriteToDatabase(commissionMembers, 'CommissionMembers', commissionMemberMap, ['MemberId', 'CommissionId', 'From'], shouldUpdateDelegate)
-        #database.WriteToDatabase(factionMembers, 'FactionMembers', factionMemberMap, ['MemberId', 'FactionId', 'From'], shouldUpdateDelegate)
-        #database.WriteToDatabase(parlamentGroupMembers, 'ParlamentGroupMembers', parlamentGroupMemberMap, ['MemberId', 'ParlamentGroupId', 'From'], shouldUpdateDelegate)
+        database.WriteToDatabase(committees, 'Committees', committeeMap, ['Id'])
+        database.WriteToDatabase(commissions, 'Commissions', commissionMap, ['Id'])
+        database.WriteToDatabase(factions, 'Factions', factionMap, ['Id'])
+        database.WriteToDatabase(parlamentGroups, 'ParlamentGroups', parlamentGroupMap, ['Id'])
+        database.WriteToDatabase(committeeMembers, 'CommitteeMembers', committeeMemberMap, ['MemberId', 'CommitteeId', 'From'], shouldUpdateDelegate)
+        database.WriteToDatabase(commissionMembers, 'CommissionMembers', commissionMemberMap, ['MemberId', 'CommissionId', 'From'], shouldUpdateDelegate)
+        database.WriteToDatabase(factionMembers, 'FactionMembers', factionMemberMap, ['MemberId', 'FactionId', 'From'], shouldUpdateDelegate)
+        database.WriteToDatabase(parlamentGroupMembers, 'ParlamentGroupMembers', parlamentGroupMemberMap, ['MemberId', 'ParlamentGroupId', 'From'], shouldUpdateDelegate)
 
 
 
-    # existing = database.ExecuteMultipleRaw('SELECT * FROM (SELECT DISTINCT MeetingId FROM `AgendaQuestions` x UNION SELECT DISTINCT MeetingId From `Agendas` c UNION SELECT DISTINCT MeetingId FROM `AgendaQuestionSpeakers`) v')
-    #print(existing)
-    
-        for s in sessions:
-            #if s.TermOfOffice != '5':
-            #    continue
+    sessions.reverse()
+    for s in sessions:
+        #if int(s.Id) > 50:
+        #    continue
 
-            meetingsXml = resources.GetData('seimo_posedziai?sesijos_id=' + s.Id) 
-            meetings = parser.ParseMeetingsFromXml(meetingsXml)
-            meetingDocuments = parser.ParseMeetingDocumentsFromXml(meetingsXml)
-            database.WriteToDatabase(meetings, 'Meetings', meetingMap, ['Id'])
-            database.WriteToDatabase(meetingDocuments, 'MeetingDocuments', meetingDocumentMap, ['MeetingId', 'Url'])
+        meetingsXml = resources.GetData('seimo_posedziai?sesijos_id=' + s.Id) 
+        meetings = parser.ParseMeetingsFromXml(meetingsXml)
+        meetingDocuments = parser.ParseMeetingDocumentsFromXml(meetingsXml)
+        database.WriteToDatabase(meetings, 'Meetings', meetingMap, ['Id'], doUpdate)
+        database.WriteToDatabase(meetingDocuments, 'MeetingDocuments', meetingDocumentMap, ['MeetingId', 'Url'])
 
-            for m in meetings:
-                 agendaXml = resources.GetData(f'seimo_posedzio_darbotvarke?posedzio_id={m.Id}')
+        for m in meetings:
+            agendaXml = resources.GetData(f'seimo_posedzio_darbotvarke?posedzio_id={m.Id}')
 
-                 agendas = parser.ParseAgendasFromXml(agendaXml, m.Id)
-                 agendaQuestions = parser.ParseAgendaQuestionsFromXml(agendaXml, m.Id)
-                 agendaQuestionSpeakers = parser.ParseAgendaQuestionSpeakersFromXml(agendaXml, m.Id)
+            agendas = parser.ParseAgendasFromXml(agendaXml, m.Id)
+            agendaQuestions = parser.ParseAgendaQuestionsFromXml(agendaXml, m.Id)
+            agendaQuestionSpeakers = parser.ParseAgendaQuestionSpeakersFromXml(agendaXml, m.Id)
 
-
-                 database.WriteToDatabase(agendas, 'Agendas', agendaMap, ['MeetingId', 'Number'], doUpdate)
-                 database.WriteToDatabase(agendaQuestions, 'AgendaQuestions', agendaQuestionMap, ['QuestionId', 'Number'], doUpdate)
-                 database.WriteToDatabase(agendaQuestionSpeakers, 'AgendaQuestionSpeakers', agendaQuestionSpeakerMap, ['MeetingId', 'Number', 'Person'], doUpdate)
+            database.WriteToDatabase(agendas, 'Agendas', agendaMap, ['MeetingId', 'Number'], doUpdate)
+            database.WriteToDatabase(agendaQuestions, 'AgendaQuestions', agendaQuestionMap, ['QuestionId', 'Number'], doUpdate)
+            database.WriteToDatabase(agendaQuestionSpeakers, 'AgendaQuestionSpeakers', agendaQuestionSpeakerMap, ['MeetingId', 'Number', 'Person'], doUpdate)
 
             
-                 actualMeetingXml = resources.GetData(f'seimo_posedzio_eiga_full?posedzio_id={m.Id}')
+            actualMeetingXml = resources.GetData(f'seimo_posedzio_eiga_full?posedzio_id={m.Id}')
 
-                 votings = parser.ParseVotingsFromXml(actualMeetingXml)
-                 database.WriteToDatabase(votings, 'Votings', votingMap, ['VotingId'])
+            meetingQuestions = parser.ParseMeetingQuestionsFromXml(actualMeetingXml, agendaQuestions)
+            votings = parser.ParseVotingsFromXml(actualMeetingXml)
+            database.WriteToDatabase(votings, 'Votings', votingMap, ['VotingId'])
+            database.WriteToDatabase(meetingQuestions, 'MeetingQuestions', meetingQuestionMap, ['MeetingId', 'Number'], doUpdate)
             
-                 for v in votings:
-                    if 'bendru sutarimu' in v.Description:
-                        continue # skip votings if there was no actual voting
+            for v in votings:
+                break
+                if 'bendru sutarimu' in v.Description:
+                    continue # skip votings if there was no actual voting
 
-                    votesXml = resources.GetData(f'sp_balsavimo_rezultatai?balsavimo_id={v.VotingId}')
-                    votes = parser.ParseVotesFromXml(votesXml)
-                    if len(list(filter(lambda x: x.Vote == 3, votes))) == len(votes):
-                        continue # skip votings if there was no actual voting
+                votesXml = resources.GetData(f'sp_balsavimo_rezultatai?balsavimo_id={v.VotingId}')
+                votes = parser.ParseVotesFromXml(votesXml)
+                if len(list(filter(lambda x: x.Vote == 3, votes))) == len(votes):
+                    continue # skip votings if there was no actual voting
 
-                    database.WriteToDatabase(votes, 'Votes', voteMap, ['VotingId', 'MemberId'])
-                    hhhhh = 5555
+                database.WriteToDatabase(votes, 'Votes', voteMap, ['VotingId', 'MemberId'])
+                hhhhh = 5555
 

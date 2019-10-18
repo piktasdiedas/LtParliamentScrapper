@@ -4,6 +4,8 @@ from datetime import datetime
 import pymysql #PyMySQL-0.9.3
 from typing import *
 import collections
+import datetime
+import re
 
 from Models import *
 
@@ -122,7 +124,7 @@ class XmlParser:
             name = node.attrib["pavadinimas"]
             dateFrom = node.attrib["data_nuo"]
             dateTo = None if node.attrib["data_iki"] == '' else node.attrib["data_iki"]
-        
+            
             parsed.append(TermOfOffice(Id = id, Name = name, From = dateFrom, To = dateTo))
 
         return parsed
@@ -139,13 +141,13 @@ class XmlParser:
         for node in root:
             id = node.attrib["posėdžio_id"]
             type = node.attrib["tipas"]
-            dateFrom = node.attrib["pradžia"]
-            dateTo = node.attrib["pabaiga"]
-            protocol = ''
-            stenogram = ''
-            video = ''
+            dateFrom = None if node.attrib["pradžia"] == '' else node.attrib["pradžia"]
+            dateTo = None if node.attrib["pabaiga"] == '' else node.attrib["pabaiga"]
+            
+            if dateFrom is None and dateFrom is None:
+                continue
 
-            parsed.append(Meeting(Id = id, SessionId = sessionId, Type = type, From = dateFrom, To = dateTo, Protocol = protocol, Stenogram = stenogram, Video = video))
+            parsed.append(Meeting(Id = id, SessionId = sessionId, Type = type, From = dateFrom, To = dateTo))
 
         return parsed
     
@@ -356,11 +358,45 @@ class XmlParser:
         xmlDom = xmlTree.fromstring(xmlFixed)
         root = xmlDom.find("SeimoPosėdis")
         meetingId = root.attrib['posėdžio_id']
+        year = root.attrib['laikas_nuo'][0:10]
+        currentQuestionGroupNr = None
+        questionGroupStartTime = None
+        questionGroupFinishTime = None
+
         for node in root:
             number = node.attrib["numeris"]
+            number = self.fixAgendaNumber(number)
             name = self.fixQuotes(node.attrib['pavadinimas'])
-            dateFrom = None if node.attrib["laikas_nuo"] == '' else node.attrib["laikas_nuo"] 
-            dateTo = None if node.attrib["laikas_iki"] == '' else node.attrib["laikas_iki"] 
+            dateFrom = None if node.attrib["laikas_nuo"] == '' else year + " " + node.attrib["laikas_nuo"] + ':00'
+            dateTo = None if node.attrib["laikas_iki"] == '' else year + " " + node.attrib["laikas_iki"] + ':00' 
+
+            patern = '[a-zA-ZąĄčČęĘėĖįĮšŠųŲūŪžŽ]+'
+            if number[len(number) - 1].isalpha():
+                startIndex = re.search(patern, number[1:]).start() + 1 if number[0] == 'r' else re.search(patern, number).start()
+                nr = number[number.index('-') + 1:startIndex]
+                alpha = number[startIndex:len(number)]
+                if alpha == 'a':
+                    currentQuestionGroupNr = nr
+                    questionGroupStartTime = dateFrom
+                    questionGroupFinishTime = dateTo
+                else:
+                    if currentQuestionGroupNr == nr: 
+                        dateFrom = questionGroupStartTime
+                        dateTo = questionGroupFinishTime
+
+
+                
+            if '.' in number:
+                nr = number.split('.')[0].split('-')[1]
+                if number.split('.')[1] == '1':
+                    currentQuestionGroupNr = nr
+                    questionGroupStartTime = dateFrom
+                    questionGroupFinishTime = dateTo
+                else:
+                    if currentQuestionGroupNr == nr:
+                        dateFrom = questionGroupStartTime
+                        dateTo = questionGroupFinishTime
+
 
             parsed.append(Agenda(MeetingId = meetingId, Name = name,  Number = number, From = dateFrom, To = dateTo))
 
@@ -377,6 +413,7 @@ class XmlParser:
         meetingId = root.attrib['posėdžio_id']
         for node in root:
             number = node.attrib["numeris"]
+
             name = self.fixQuotes(node.attrib['pavadinimas'])
             for nodeChild in node:
                 if nodeChild.tag == 'KlausimoStadija':
@@ -384,7 +421,7 @@ class XmlParser:
                     stage = nodeChild.attrib['pavadinimas']
                     url = nodeChild.attrib['dokumento_nuoroda']
 
-                    #print(f"{number} {stage} -- {name} -- {questionId}")
+                    number = self.fixAgendaNumber(number)
                     parsed.append(AgendaQuestion(MeetingId = meetingId, QuestionId = questionId,  Number = number, Stage = stage, DocumentUrl = url))
 
         return parsed
@@ -404,7 +441,7 @@ class XmlParser:
                     person = nodeChild.attrib['asmuo']
                     position = nodeChild.attrib['pareigos']
 
-                    #print(f"{number}. {person} -- {position}")
+                    number = self.fixAgendaNumber(number)
                     parsed.append(AgendaQuestionSpeaker(MeetingId = meetingId,  Person = person, Position = position, Number = number))
 
         return parsed
@@ -447,7 +484,6 @@ class XmlParser:
         for node in root:
             if node.tag == 'BendriBalsavimoRezultatai':
                 dateOn = node.attrib['balsavimo_laikas']
-
             if node.tag == 'IndividualusBalsavimoRezultatas':
                 memberId = node.attrib['asmens_id']
                 voteStr = node.attrib['kaip_balsavo']
@@ -462,7 +498,7 @@ class XmlParser:
         return parsed
 
 
-
+    
     def ParseRegistrationFromXml(self, xml: str) -> List[Registration]:
         parsed = []
         
@@ -481,6 +517,84 @@ class XmlParser:
                 parsed.append(Registration(VotingId = votingId, MemberId = memberId, Vote = vote, DateOn = dateOn))
 
         return parsed
+
+
+    def ParseMeetingQuestionsFromXml(self, xml: str, agendaModels: List[AgendaQuestion]) -> List[MeetingQuestion]:
+        parsed = []
+        
+        xmlFixed = self.fixXml(xml, id)
+
+        xmlDom = xmlTree.fromstring(xmlFixed)
+        root = xmlDom.find("posedis")
+        meetingId = root.attrib['pos_id']
+        root = root.find('posedzio-eiga')
+        for node in root:
+            meetingQuestionId = node.attrib['svarst_kl_stad_id']
+            #agendaQuestionId = node.attrib['kl_stad_id'] if 'kl_stad_id' in node.attrib else None
+
+            documentId = ''
+            if 'dok_key' in node.attrib:
+                documentId = node.attrib['dok_key']
+
+            number = "" if node.find('nr') is None else node.find('nr').text
+            number = self.fixAgendaNumber(number)
+
+            name = "" if node.find('pavadinimas') is None else node.find('pavadinimas').text
+            
+            stage = ""
+            if node.find('stadija') is not None:
+                stage = node.find('stadija').text
+
+            type = '' if node.find('tipas') is None else node.find('tipas').text
+
+            dateFrom = node.find('nuo').text
+            dateTo = dateFrom if node.find('iki') is None else node.find('iki').text
+
+            questionGroupId = None
+            numbers = []
+            if 'kl_gr_id' in node.attrib:
+                questionGroupId = node.attrib['kl_gr_id']
+            numbers = number.split(",")
+
+            for n in numbers:
+                agendaQuestionId = node.attrib['kl_stad_id'] if 'kl_stad_id' in node.attrib else None
+                if agendaQuestionId is None:
+                    for a in agendaModels:
+                        if a.Number == n:
+                            agendaQuestionId = a.QuestionId
+                            break
+
+                if agendaQuestionId is None:
+                    aaaaa = 8888
+
+
+                parsed.append(MeetingQuestion(MeetingId = meetingId, MeetingQuestionId = meetingQuestionId, QuestionId = agendaQuestionId, Name = name, Stage = stage, Type = type, DocumentId = documentId, Number = n, From = dateFrom, To = dateTo, QuestionGroupId = questionGroupId))
+            #else:
+            #    parsed.append(MeetingQuestion(MeetingId = meetingId, MeetingQuestionId = meetingQuestionId, QuestionId = 0, Name = name, Stage = stage, Type = type, DocumentId = documentId, Number = number, From = dateFrom, To = dateTo, QuestionGroupId = questionGroupId))
+        validDate = ''
+        for p in parsed:
+            try:
+                datetime.datetime.strptime(getattr(p, "From"), '%Y-%m-%d %H:%M:%S')
+                validDate = getattr(p, "From")[0:10]
+                break
+            except ValueError:
+                pass
+        parsedAndFixed = []
+        for p in parsed:
+            if len(getattr(p, "From")) < 10:
+                oldFrom = getattr(p, "From")
+                oldTo = getattr(p, "To")
+                #p._replace(From = validDate + " " + oldFrom)
+                #p._replace(To = validDate + " " + oldTo)
+                n = MeetingQuestion(MeetingId = p.MeetingId, MeetingQuestionId = p.MeetingQuestionId, QuestionId = p.QuestionId, Name = p.Name, Stage = p.Stage, Type = p.Type, DocumentId = p.DocumentId, Number = p.Number, From = validDate + " " + oldFrom, To = validDate + " " + oldTo, QuestionGroupId = p.QuestionGroupId)
+                parsedAndFixed.append(n)
+            else:
+                parsedAndFixed.append(p)
+
+
+        return parsedAndFixed
+
+
 
 
 
@@ -502,7 +616,20 @@ class XmlParser:
             temp = temp.replace('judėjimo "Černobylis" pirmininkas', 'judėjimo „Černobylis” pirmininkas')
 
         return temp
-
+    
     def fixQuotes(self, text: str) -> str:
-        temp = text.replace('„', '"').replace('”', '"').replace('„', '"').replace('quot;', '"')
+        temp = text.replace('„', '"').replace('”', '"').replace('„', '"').replace('“', '"').replace('quot;', '"').replace('&;', '').replace('&', '')
+        return temp
+    
+    def fixAgendaNumber(self, text: str) -> str:
+        temp = text.replace("'", '"').replace(" ", "")
+
+        
+        if len(temp) == 0:
+            return temp
+
+        if temp[-1] == '.':
+            strLen = len(temp) - 1
+            temp = temp[0 : strLen]
+
         return temp
