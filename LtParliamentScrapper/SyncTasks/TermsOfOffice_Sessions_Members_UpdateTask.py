@@ -28,22 +28,22 @@ def TermsOfOffice_Sessions_Members_UpdateTask() -> None:
 
 
     testId = '967'
-    aggg = resources.GetData('seimo_posedzio_darbotvarke?posedzio_id=' + testId)
+    aggg = resources.GetData(resources.agendaUrl + testId)
     agendaModels = parser.ParseAgendaQuestionsFromXml(aggg, testId)
     assssss = parser.ParseAgendasFromXml(aggg, testId)
-    meet = resources.GetData('seimo_posedzio_eiga_full?posedzio_id=' + testId)
+    meet = resources.GetData(resources.meetingUrl + testId)
     ddd = parser.ParseMeetingQuestionsFromXml(meet, agendaModels)
     #database.WriteToDatabase(ddd, 'MeetingQuestions', meetingQuestionMap, ['MeetingQuestionId', 'QuestionId'], doUpdate)
     database.WriteToDatabase(agendaModels, 'AgendaQuestions', agendaQuestionMap, ['QuestionId', 'Number'], doUpdate)
 
     #####
 
-    termOfOfficeXml = resources.GetData('seimo_kadencijos')
+    termOfOfficeXml = resources.GetData(resources.allTermsOfOffice)
     termOfOffice = parser.ParseTermOfOfficeFromXml(termOfOfficeXml)
     database.WriteToDatabase(termOfOffice, 'TermOfOffice', termOfOfficeMap, ['Id'])
 
 
-    sessionsXml = resources.GetData('seimo_sesijos?ar_visos=T')
+    sessionsXml = resources.GetData(resources.allSessions)
     sessions = parser.ParseSessionsFromXml(sessionsXml)
     database.WriteToDatabase(sessions, 'Sessions', sessionMap, ['Id'])
 
@@ -63,12 +63,11 @@ def TermsOfOffice_Sessions_Members_UpdateTask() -> None:
             break
 
         
-        membersXml = resources.GetData('seimo_nariai?kadencijos_id=' + str(t.Id))
+        membersXml = resources.GetData(resources.membersByTermsOfOfficeUrl + str(t.Id))
         members = parser.ParseMembersFromXml(membersXml)
         database.WriteToDatabase(members, 'Members', memberMap, ['Id'])
 
-        termOfOfficeMembersXml = resources.GetData('seimo_nariai?kadencijos_id=' + str(t.Id))
-        termOfOfficeMembers = parser.ParseTermOfOfficeMembersFromXml(termOfOfficeMembersXml)
+        termOfOfficeMembers = parser.ParseTermOfOfficeMembersFromXml(membersXml)
         database.WriteToDatabase(termOfOfficeMembers, 'TermOfOfficeMembers', termOfOfficeMemberMap, ['TermOfOfficeId', 'MemberId'])
         
         committees = parser.ParseCommitteesFromXmlFromMembers(membersXml)
@@ -95,8 +94,8 @@ def TermsOfOffice_Sessions_Members_UpdateTask() -> None:
 
         for m in members:
             memberId = m.Id
-            legislationsXml = resources.GetData('sn_inicijuoti_ta_projektai?asmens_id=' + str(memberId))        
-            legislationSuggestionsXml = resources.GetData('sn_pasiulymai_ta_projektams?asmens_id=' + str(memberId))
+            legislationsXml = resources.GetData(resources.initiatedLegislations + str(memberId))        
+            legislationSuggestionsXml = resources.GetData(resources.legislationSuggestions + str(memberId))
 
             legislations = parser.ParseLegislationsFromXml(legislationsXml)
             legislationSuggestions = parser.ParseLegislationSuggestionsFromXml(legislationSuggestionsXml)
@@ -113,7 +112,7 @@ def TermsOfOffice_Sessions_Members_UpdateTask() -> None:
         if(is28DaysAgo(s) and allowToBreak):
             break
 
-        meetingsXml = resources.GetData('seimo_posedziai?sesijos_id=' + s.Id) 
+        meetingsXml = resources.GetData(resources.meetingsUrl + s.Id) 
         meetings = parser.ParseMeetingsFromXml(meetingsXml)
         meetingDocuments = parser.ParseMeetingDocumentsFromXml(meetingsXml)
         database.WriteToDatabase(meetings, 'Meetings', meetingMap, ['Id'], doUpdate)
@@ -124,7 +123,7 @@ def TermsOfOffice_Sessions_Members_UpdateTask() -> None:
             if(is28DaysAgo(m) and allowToBreak):
                 break
 
-            agendaXml = resources.GetData(f'seimo_posedzio_darbotvarke?posedzio_id={m.Id}')
+            agendaXml = resources.GetData(resources.agendaUrl + m.Id)
 
             agendas = parser.ParseAgendasFromXml(agendaXml, m.Id)
             agendaQuestions = parser.ParseAgendaQuestionsFromXml(agendaXml, m.Id)
@@ -135,7 +134,7 @@ def TermsOfOffice_Sessions_Members_UpdateTask() -> None:
             database.WriteToDatabase(agendaQuestionSpeakers, 'AgendaQuestionSpeakers', agendaQuestionSpeakerMap, ['MeetingId', 'Number', 'Person'], doUpdate)
 
             
-            actualMeetingXml = resources.GetData(f'seimo_posedzio_eiga_full?posedzio_id={m.Id}')
+            actualMeetingXml = resources.GetData(resources.meetingUrl + m.Id)
 
             meetingQuestions = parser.ParseMeetingQuestionsFromXml(actualMeetingXml, agendaQuestions)
             votings = parser.ParseVotingsFromXml(actualMeetingXml)
@@ -147,7 +146,7 @@ def TermsOfOffice_Sessions_Members_UpdateTask() -> None:
                 if 'bendru sutarimu' in v.Description:
                     continue # skip votings if there was no actual voting
 
-                votesXml = resources.GetData(f'sp_balsavimo_rezultatai?balsavimo_id={v.VotingId}')
+                votesXml = resources.GetData(resources.votingResultsUrl + v.VotingId)
                 votes = parser.ParseVotesFromXml(votesXml)
                 if len(list(filter(lambda x: x.Vote == 3, votes))) == len(votes):
                     continue # skip votings if there was no actual voting
