@@ -1,5 +1,5 @@
 from typing import *
-from datetime import date
+from datetime import datetime, date, timedelta
 
 from XmlParser import *
 from ParlamentResources import *
@@ -7,6 +7,19 @@ from DatabaseConnector import *
 
 def TermsOfOffice_Sessions_Members_UpdateTask() -> None:
  
+    def is28DaysAgo(o: object, prop: str = None) -> bool:
+        _28DaysAgo = date.today() + timedelta(days=-28)
+        prop = prop if prop is not None else 'To'
+        dateStr = getattr(o, prop)
+
+        if (dateStr is not None and len(dateStr) != len('xxxx-xx-xx')):
+            dateStr = dateStr[0:len('xxxx-xx-xx')]
+
+        return dateStr is not None and _28DaysAgo > date.fromisoformat(dateStr)
+
+    allowToBreak = True
+
+
     doUpdate = lambda x: True
 
     resources = ParlamentResources()
@@ -14,7 +27,7 @@ def TermsOfOffice_Sessions_Members_UpdateTask() -> None:
     parser = XmlParser()
 
 
-    testId = '-501401'
+    testId = '967'
     aggg = resources.GetData('seimo_posedzio_darbotvarke?posedzio_id=' + testId)
     agendaModels = parser.ParseAgendaQuestionsFromXml(aggg, testId)
     assssss = parser.ParseAgendasFromXml(aggg, testId)
@@ -39,15 +52,17 @@ def TermsOfOffice_Sessions_Members_UpdateTask() -> None:
     def shouldUpdateDelegate(obj):
         d = datetime.datetime.strptime(obj.From, '%Y-%m-%d').date()
         return d >= currentTermOfOfficeStart
-    
 
+
+    _28DaysAgo = date.today() + timedelta(days=-28)
 
     termOfOffice.reverse()
     for t in termOfOffice:
-        break
-        #if t.Id != '8':
-        #    continue
 
+        if(is28DaysAgo(t) and allowToBreak):
+            break
+
+        
         membersXml = resources.GetData('seimo_nariai?kadencijos_id=' + str(t.Id))
         members = parser.ParseMembersFromXml(membersXml)
         database.WriteToDatabase(members, 'Members', memberMap, ['Id'])
@@ -78,11 +93,25 @@ def TermsOfOffice_Sessions_Members_UpdateTask() -> None:
         database.WriteToDatabase(parlamentGroupMembers, 'ParlamentGroupMembers', parlamentGroupMemberMap, ['MemberId', 'ParlamentGroupId', 'From'], shouldUpdateDelegate)
 
 
+        for m in members:
+            memberId = m.Id
+            legislationsXml = resources.GetData('sn_inicijuoti_ta_projektai?asmens_id=' + str(memberId))        
+            legislationSuggestionsXml = resources.GetData('sn_pasiulymai_ta_projektams?asmens_id=' + str(memberId))
+
+            legislations = parser.ParseLegislationsFromXml(legislationsXml)
+            legislationSuggestions = parser.ParseLegislationSuggestionsFromXml(legislationSuggestionsXml)
+
+        
+            database.WriteToDatabase(legislations, 'InitiatedLegislations', initiatedLegislationMap, ['MemberId', 'RegistrationNumber'], doUpdate)
+            database.WriteToDatabase(legislationSuggestions, 'InitiatedLegislationSuggestions', initiatedLegislationSuggestionMap, ['MemberId', 'RegistrationNumber'], doUpdate)
+
+
 
     sessions.reverse()
     for s in sessions:
-        #if int(s.Id) > 50:
-        #    continue
+        
+        if(is28DaysAgo(s) and allowToBreak):
+            break
 
         meetingsXml = resources.GetData('seimo_posedziai?sesijos_id=' + s.Id) 
         meetings = parser.ParseMeetingsFromXml(meetingsXml)
@@ -91,6 +120,10 @@ def TermsOfOffice_Sessions_Members_UpdateTask() -> None:
         database.WriteToDatabase(meetingDocuments, 'MeetingDocuments', meetingDocumentMap, ['MeetingId', 'Url'])
 
         for m in meetings:
+
+            if(is28DaysAgo(m) and allowToBreak):
+                break
+
             agendaXml = resources.GetData(f'seimo_posedzio_darbotvarke?posedzio_id={m.Id}')
 
             agendas = parser.ParseAgendasFromXml(agendaXml, m.Id)
@@ -106,7 +139,7 @@ def TermsOfOffice_Sessions_Members_UpdateTask() -> None:
 
             meetingQuestions = parser.ParseMeetingQuestionsFromXml(actualMeetingXml, agendaQuestions)
             votings = parser.ParseVotingsFromXml(actualMeetingXml)
-            database.WriteToDatabase(votings, 'Votings', votingMap, ['VotingId'])
+            database.WriteToDatabase(votings, 'Votings', votingMap, ['VotingId'], doUpdate)
             database.WriteToDatabase(meetingQuestions, 'MeetingQuestions', meetingQuestionMap, ['MeetingId', 'Number'], doUpdate)
             
             for v in votings:

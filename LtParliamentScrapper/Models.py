@@ -72,8 +72,8 @@ AgendaQuestionSpeaker = collections.namedtuple('AgendaQuestionSpeakers', ' '.joi
 meetingQuestionMap = collections.OrderedDict([('MeetingQuestionId', 'MeetingQuestionId'), ('QuestionId', 'QuestionId'), ('MeetingId', 'MeetingId'), ('Name', 'Name'), ('Stage', 'Stage'), ('Type', 'Type'), ('DocumentId', 'DocumentId'), ('Number', 'Number'), ('From', 'From'), ('To', 'To'), ('QuestionGroupId', 'QuestionGroupId')])
 MeetingQuestion = collections.namedtuple('MeetingQuestion', ' '.join(meetingQuestionMap.keys()))
 
-votingMap = collections.OrderedDict([('VotingId', 'VotingId'), ('MeetingId', 'MeetingId'), ('Resolution', 'Resolution'), ('Description', 'Description')])
-Voting = collections.namedtuple('Vote', ' '.join(votingMap.keys()))
+votingMap = collections.OrderedDict([('VotingId', 'VotingId'), ('MeetingId', 'MeetingId'), ('Resolution', 'Resolution'), ('Description', 'Description'), ('QuestionId', 'QuestionId')])
+Voting = collections.namedtuple('Voting', ' '.join(votingMap.keys()))
 
 voteMap = collections.OrderedDict([('VotingId', 'VotingId'), ('MemberId', 'MemberId'), ('Vote', 'Vote'), ('VoteStr', 'VoteStr'), ('DateOn', 'DateOn')])
 Vote = collections.namedtuple('Vote', ' '.join(voteMap.keys()))
@@ -91,3 +91,13 @@ RegistratedUser = collections.namedtuple('RegistratedUser', ' '.join(registrated
 
 meetingQuestionSpeakerMap = collections.OrderedDict([('MeetingId', 'MeetingId'), ('Person', 'Person'), ('PersonId', 'PersonId'), ('DiscussionId', 'DiscussionId'), ('Position', 'Position'), ('Number', 'Number'), ('From', 'From'), ('To', 'To')])
 MeetingQuestionSpeaker = collections.namedtuple('MeetingQuestionSpeaker', ' '.join(meetingQuestionSpeakerMap.keys()))
+
+
+
+
+initiatedLegislationMap = collections.OrderedDict([('MemberId', 'MemberId'), ('Type', 'Type'), ('RegistrationDate', 'RegistrationDate'), ('RegistrationNumber', 'RegistrationNumber'), ('Name', 'Name')])
+InitiatedLegislation = collections.namedtuple('InitiatedLegislation', ' '.join(initiatedLegislationMap.keys()))
+
+initiatedLegislationSuggestionMap = collections.OrderedDict([('MemberId', 'MemberId'), ('Type', 'Type'), ('RegistrationDate', 'RegistrationDate'), ('RegistrationNumber', 'RegistrationNumber'), ('Name', 'Name')])
+InitiatedLegislationSuggestion = collections.namedtuple('InitiatedLegislationSuggestion', ' '.join(initiatedLegislationSuggestionMap.keys()))
+

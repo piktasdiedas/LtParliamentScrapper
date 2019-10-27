@@ -371,9 +371,9 @@ class XmlParser:
             dateTo = None if node.attrib["laikas_iki"] == '' else year + " " + node.attrib["laikas_iki"] + ':00' 
 
             patern = '[a-zA-ZąĄčČęĘėĖįĮšŠųŲūŪžŽ]+'
-            if number[len(number) - 1].isalpha():
+            if len(number) != 0 and number[len(number) - 1].isalpha():
                 startIndex = re.search(patern, number[1:]).start() + 1 if number[0] == 'r' else re.search(patern, number).start()
-                nr = number[number.index('-') + 1:startIndex]
+                nr = number[:startIndex]
                 alpha = number[startIndex:len(number)]
                 if alpha == 'a':
                     currentQuestionGroupNr = nr
@@ -381,21 +381,21 @@ class XmlParser:
                     questionGroupFinishTime = dateTo
                 else:
                     if currentQuestionGroupNr == nr: 
-                        dateFrom = questionGroupStartTime
-                        dateTo = questionGroupFinishTime
+                        dateFrom = questionGroupStartTime if dateFrom is None else dateFrom
+                        dateTo = questionGroupFinishTime if dateTo is None else dateTo
 
 
                 
             if '.' in number:
-                nr = number.split('.')[0].split('-')[1]
+                nr = (number.split('.')[0].split('-')[1]) if '-' in number else number.split('.')[0]
                 if number.split('.')[1] == '1':
                     currentQuestionGroupNr = nr
                     questionGroupStartTime = dateFrom
                     questionGroupFinishTime = dateTo
                 else:
                     if currentQuestionGroupNr == nr:
-                        dateFrom = questionGroupStartTime
-                        dateTo = questionGroupFinishTime
+                        dateFrom = questionGroupStartTime if dateFrom is None else dateFrom
+                        dateTo = questionGroupFinishTime if dateTo is None else dateTo
 
 
             parsed.append(Agenda(MeetingId = meetingId, Name = name,  Number = number, From = dateFrom, To = dateTo))
@@ -460,13 +460,14 @@ class XmlParser:
         meetingId = root.attrib['pos_id']
         root = root.find('posedzio-eiga')
         for node in root:
+            questionId = node.attrib['svarst_kl_stad_id']
             votings = node.find("balsavimai")
             for v in votings:
                 votingId = v.attrib['bals_id']
                 resolution = v.find('aprasas').text
                 description = v.find('antraste').text
                 
-                parsed.append(Voting(VotingId = votingId, MeetingId = meetingId,  Resolution = resolution, Description = description,))
+                parsed.append(Voting(VotingId = votingId, MeetingId = meetingId,  Resolution = resolution, Description = description, QuestionId = questionId))
 
         return parsed
 
@@ -598,7 +599,55 @@ class XmlParser:
 
 
 
+    
+      
+    def ParseLegislationsFromXml(self, xml: str) -> List[InitiatedLegislation]:
+        parsed = []
+        
+        xmlFixed = self.fixXml(xml, id)
 
+        xmlDom = xmlTree.fromstring(xmlFixed)
+        root = xmlDom.find("SeimoNarys")
+        if root is None:
+            return parsed
+
+        memberId = root.attrib['asmens_id']
+        for node in root:
+            type = node.attrib["požymis"]
+            registrationDate = node.attrib["registracijos_data"]
+            registrationNumber = node.attrib["registracijos_numeris"]
+            name = node.attrib["pavadinimas"]
+
+            
+            parsed.append(InitiatedLegislation(MemberId = memberId, Type = type,  RegistrationDate = registrationDate, RegistrationNumber = registrationNumber, Name = name))
+
+        return parsed
+
+   
+    def ParseLegislationSuggestionsFromXml(self, xml: str) -> List[InitiatedLegislationSuggestion]:
+        parsed = []
+        
+        xmlFixed = self.fixXml(xml, id)
+
+        xmlDom = xmlTree.fromstring(xmlFixed)
+        root = xmlDom.find("SeimoNarys")
+        if root is None:
+            return parsed
+
+        memberId = root.attrib['asmens_id']
+        for node in root:
+            type = node.attrib["požymis"]
+            registrationDate = node.attrib["registracijos_data"]
+            registrationNumber = node.attrib["registracijos_numeris"]
+            name = node.attrib["pavadinimas"]
+
+            
+            parsed.append(InitiatedLegislationSuggestion(MemberId = memberId, Type = type,  RegistrationDate = registrationDate, RegistrationNumber = registrationNumber, Name = name))
+
+        return parsed
+
+
+    
 
 
 
