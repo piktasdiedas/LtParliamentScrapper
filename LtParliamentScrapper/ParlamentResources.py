@@ -9,7 +9,8 @@ class ParlamentResources:
 
     termsOfOfficeUrl = 'seimo_kadencijos'
     membersByTermsOfOfficeUrl = 'seimo_nariai?kadencijos_id='
-    agendaUrl = 'seimo_posedzio_darbotvarke?posedzio_id='
+    #agendaUrl = 'seimo_posedzio_darbotvarke?posedzio_id='
+    agendaUrl = 'seimo_pos_darb?posedzio_id='
     meetingUrl = 'seimo_posedzio_eiga_full?posedzio_id='
     allTermsOfOffice = 'seimo_kadencijos'
     allSessions = 'seimo_sesijos?ar_visos=T'
